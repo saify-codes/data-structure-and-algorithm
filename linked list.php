@@ -115,7 +115,6 @@ class LinkedList{
                 $current = $current->next;
             }
 
-            $current->next = null;
             $this->tail = $current;
 
         }

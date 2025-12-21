@@ -69,6 +69,48 @@ class BTree
         };
     }
 
+    public function depth($val){
+        return $this->_depth($this->root, $val);
+    }
+
+    public function depthOfTree(){
+        return $this->_depthOfTree($this->root);        
+    }
+
+    // recursive methods
+
+    private function _depth($root, $val, $depth = 0){
+
+        if ($root == null) {
+            return -1;
+        }
+
+        if ($root->data == $val) {
+            return $depth;
+        }
+
+        if ($root->data > $val) {
+            return $this->_depth($root->left, $val, $depth + 1);
+        }
+
+        return $this->_depth($root->right, $val, $depth + 1);
+
+    }
+
+    private function _depthOfTree($root, $depth = 0){
+
+        if ($root == null) {
+            return -1;
+        }
+
+        if ($root->left == null && $root->right == null) {
+            return $depth;
+        }
+
+        return max($this->_depthOfTree($root->left, $depth + 1), $this->_depthOfTree($root->right, $depth + 1));         
+
+    }
+
     private function preOrderTraversal($root)
     {
 
@@ -125,8 +167,8 @@ class BTree
 
 $tree = new BTree;
 
-foreach ([7,3,8,1,4,7,10] as $i) {
+foreach ([7,3,8,1,4,8,10] as $i) {
     $tree->insert($i);
 }
 
-$tree->traverse('postorder');
+print $tree->depth(743);
