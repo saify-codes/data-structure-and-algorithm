@@ -13,7 +13,7 @@ class Node
 class BTree
 {
 
-    private $root;
+    public $root;
 
     public function __construct()
     {
@@ -65,6 +65,7 @@ class BTree
             'preorder'   => $this->preOrderTraversal($this->root),
             'inorder'    => $this->InOrderTraversal($this->root),
             'postorder'  => $this->PostOrderTraversal($this->root),
+            'level'      => $this->LevelOrderTraversal($this->root),
             default      => throw new Exception('Invalid strategy')
         };
     }
@@ -86,10 +87,32 @@ class BTree
     }
 
     public function isEqual($tree){
-        return $this->compareTreeNodes($this->root, $tree);
+        return $this->compareTreeNodes($this->root, $tree->root);
+    }
+
+    public static function isValidBST($tree){
+
+
+
     }
 
     // Private helper methods for recursive operations
+
+    private function validateBst($root, $min = PHP_INT_MIN, $max = PHP_INT_MAX) {
+        if ($root == null) {
+            return true;
+        }
+
+        // Current node must be within valid range
+        if ($root->data <= $min || $root->data > $max) {
+            return false;
+        }
+
+        // Left subtree: all nodes must be < current node
+        // Right subtree: all nodes must be >= current node
+        return $this->validateBst($root->left, $min, $root->data) &&
+            $this->validateBst($root->right, $root->data, $max);
+    }
 
     private function calculateHeight($root){
         
@@ -143,7 +166,7 @@ class BTree
             return;
         }
 
-        print $root->data . "\n";
+        print $root->data;
         $this->preOrderTraversal($root->left);
         $this->preOrderTraversal($root->right);
     }
@@ -156,7 +179,7 @@ class BTree
         }
 
         $this->InOrderTraversal($root->left);
-        print $root->data . "\n";
+        print $root->data;
         $this->InOrderTraversal($root->right);
     }
 
@@ -169,7 +192,35 @@ class BTree
 
         $this->PostOrderTraversal($root->left);
         $this->PostOrderTraversal($root->right);
-        print $root->data . "\n";
+        print $root->data;
+    }
+
+    private function LevelOrderTraversal($root){
+
+        if ($this->root == null) {
+            return;
+        }
+
+        $queue = [$this->root];
+
+        while (count($queue) != 0) {
+            
+            $node = array_shift($queue);
+
+            print $node->data;
+
+            if ($node->left) {
+                array_unshift($queue, $node->left);
+            }
+
+            if ($node->right) {
+                array_unshift($queue, $node->right);
+            }
+
+        }
+
+
+
     }
 
     private function findRecursive($root, $val)
@@ -216,9 +267,11 @@ class BTree
 }
 
 $tree = new BTree;
+$tree2 = new BTree;
 
-foreach ([7,3,8,1,4,8,10,1,2,32,23,3,2,3,2,1,2,3,1] as $i) {
+foreach ([10,9,8,7,6,5,4,3,2,1] as $i) {
     $tree->insert($i);
+    $tree2->insert($i);
 }
 
-print $tree->getDepthOfTree();
+print $tree->traverse();
