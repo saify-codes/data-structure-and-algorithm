@@ -69,17 +69,42 @@ class BTree
         };
     }
 
-    public function depth($val){
-        return $this->_depth($this->root, $val);
+    public function getDepthOfNode($val){
+        return $this->calculateNodeDepth($this->root, $val);
     }
 
-    public function depthOfTree(){
-        return $this->_depthOfTree($this->root);        
+    public function getHeightOfTree(){
+        return $this->calculateHeight($this->root);
     }
 
-    // recursive methods
+    public function getDepthOfTree(){
+        return $this->calculateTreeDepth($this->root);        
+    }
 
-    private function _depth($root, $val, $depth = 0){
+    public function getMinimumNode(){
+        return $this->findMinimumNode($this->root);
+    }
+
+    public function isEqual($tree){
+        return $this->compareTreeNodes($this->root, $tree);
+    }
+
+    // Private helper methods for recursive operations
+
+    private function calculateHeight($root){
+        
+        if ($root == null) {
+            return -1;
+        }
+
+        if ($root->left == null && $root->right == null) {
+            return 0;
+        }
+
+        return max($this->calculateHeight($root->left), $this->calculateHeight($root->right)) + 1;
+    }
+
+    private function calculateNodeDepth($root, $val, $depth = 0){
 
         if ($root == null) {
             return -1;
@@ -90,14 +115,14 @@ class BTree
         }
 
         if ($root->data > $val) {
-            return $this->_depth($root->left, $val, $depth + 1);
+            return $this->calculateNodeDepth($root->left, $val, $depth + 1);
         }
 
-        return $this->_depth($root->right, $val, $depth + 1);
+        return $this->calculateNodeDepth($root->right, $val, $depth + 1);
 
     }
 
-    private function _depthOfTree($root, $depth = 0){
+    private function calculateTreeDepth($root, $depth = 0){
 
         if ($root == null) {
             return -1;
@@ -107,7 +132,7 @@ class BTree
             return $depth;
         }
 
-        return max($this->_depthOfTree($root->left, $depth + 1), $this->_depthOfTree($root->right, $depth + 1));         
+        return max($this->calculateTreeDepth($root->left, $depth + 1), $this->calculateTreeDepth($root->right, $depth + 1));         
 
     }
 
@@ -163,12 +188,37 @@ class BTree
 
         return $this->findRecursive($root->right, $val);
     }
+
+    private function findMinimumNode($root){
+
+        if ($root == null) {
+            return null;
+        }
+
+        if ($root->left == null) {
+            return $root;
+        }
+
+        return $this->findMinimumNode($root->left);
+        
+    }
+
+    private function compareTreeNodes($tree1, $tree2){
+        
+        if ($tree1 == null || $tree2 == null) {
+            return $tree1 == $tree2;
+        }
+
+        return $tree1->data == $tree2->data &&
+                $this->compareTreeNodes($tree1->left, $tree2->left) &&
+                $this->compareTreeNodes($tree1->right, $tree2->right);
+    }
 }
 
 $tree = new BTree;
 
-foreach ([7,3,8,1,4,8,10] as $i) {
+foreach ([7,3,8,1,4,8,10,1,2,32,23,3,2,3,2,1,2,3,1] as $i) {
     $tree->insert($i);
 }
 
-print $tree->depth(743);
+print $tree->getDepthOfTree();
