@@ -92,8 +92,7 @@ class BTree
 
     public static function isValidBST($tree){
 
-
-
+        return (new self)->validateBst($tree->node);
     }
 
     // Private helper methods for recursive operations
