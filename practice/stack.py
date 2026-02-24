@@ -1,14 +1,15 @@
-import ctypes
+from ctypes import c_int32
 
-class Stack:    
+
+class Stack:
     
-    def __init__(self, capacity = 5):
-        self.pointer = -1
-        self.array   = (ctypes.c_int32 * capacity)()
+    def __init__(self, capacity=5):
+        self.array   = (c_int32 * capacity)()
         self.size    = capacity
-        
+        self.pointer = -1 
+    
     def empty(self):
-        return self.pointer == -1
+        return self.pointer == - 1
     
     def full(self):
         return self.pointer == self.size - 1
@@ -16,7 +17,7 @@ class Stack:
     def push(self, val):
         
         if self.full():
-            raise Exception('Overflow')
+            raise Exception("Overflow")
         
         self.pointer += 1
         self.array[self.pointer] = val
@@ -24,19 +25,21 @@ class Stack:
     def pop(self):
         
         if self.empty():
-            raise Exception('Underflow')
+            raise Exception("Underflow")
         
-        val =  self.array[self.pointer]
+        val = self.array[self.pointer]
         self.pointer -= 1
         
         return val
     
-
     def peek(self):
         
         if self.empty():
             return None
         
-        return  self.array[self.pointer]
+        return self.array[self.pointer]
     
+    
+    
+        
         

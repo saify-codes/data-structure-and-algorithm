@@ -21,7 +21,7 @@ class CardPayment implements PaymentGateway
     }
 }
 
-class PaymentAdapter implements EPaymentGateway
+class EPaymentAdapter implements EPaymentGateway
 {
     private $gateway;
 
@@ -37,5 +37,5 @@ class PaymentAdapter implements EPaymentGateway
 }
 
 
-$obj = new PaymentAdapter(new CardPayment());
+$obj = new EPaymentAdapter(new CardPayment());
 echo $obj->process(100);
