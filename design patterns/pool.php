@@ -1,62 +1,86 @@
 <?php
 
-class Connection{
-    public function __construct(public string $uid) {}
-    public function exec($sql){
-        print $this->uid . " Exceuting query: [$sql]\n";
+class Connection
+{
+    private $id;
+
+    public function __construct($id)
+    {
+        $this->id = $id;
+    }
+
+    public function query($sql)
+    {
+        return "Conn {$this->id} executing: {$sql}\n";
     }
 }
 
-class ConnectionPool{
-
+class ConnectionPool
+{
     private $available;
     private $inUse;
     private $capacity;
-    public function __construct($capacity = 3) {
 
-        $this->available = [];
-        $this->inUse = [];
-        $this->capacity = $capacity;
-
+    public function __construct($capacity = 5)
+    {
+        $this->capacity     = $capacity;
+        $this->available    = [];
+        $this->inUse        = [];
     }
 
     public function acquire(){
-        
-        if (!empty($this->available)) {
+
+        if(!empty($this->available)){
             $conn = array_pop($this->available);
-        }elseif (count($this->inUse) < $this->capacity){
+        }else if (count($this->inUse) < $this->capacity) {
             $conn = new Connection(uniqid());
         }else{
-            throw new Exception("Pool exhausted");
+            throw new Exception("Pool Exhausted");
         }
 
-        $id = spl_object_id($conn);
-        $this->inUse[$id] = $conn;
+        $this->inUse[spl_object_id($conn)] = $conn;
         return $conn;
+
     }
-    
-    public function release(Connection $conn){
-        $id = spl_object_id($conn);
+
+    public function release(Connection $connection){
+
+        $id = spl_object_id($connection);
 
         if (isset($this->inUse[$id])) {
             unset($this->inUse[$id]);
-            $this->available[] = $conn;
+            $this->available[] = $connection;
         }
 
     }
 }
 
+
+
+
 $pool = new ConnectionPool();
 
-$c1 = $pool->acquire();
-$c2 = $pool->acquire();
-$c3 = $pool->acquire();
+$conn1 = $pool->acquire();
+echo $conn1->query("SELECT 1");
+echo $conn1->query("SELECT 1");
+echo $conn1->query("SELECT 1");
+echo $conn1->query("SELECT 1");
+echo $conn1->query("SELECT 1");
 
-$c1->exec("SELECT 1");
-$c2->exec("SELECT 1");
-$c3->exec("SELECT 2");
+$conn2 = $pool->acquire(); 
+echo $conn2->query("SELECT 2");
+echo $conn2->query("SELECT 2");
+echo $conn2->query("SELECT 2");
+echo $conn2->query("SELECT 2");
+echo $conn2->query("SELECT 2");
 
-$pool->release($c3);
-$c4 = $pool->acquire();
+$conn3 = $pool->acquire(); 
+echo $conn3->query("SELECT 3");
+echo $conn3->query("SELECT 3");
+echo $conn3->query("SELECT 3");
+echo $conn3->query("SELECT 3");
+echo $conn3->query("SELECT 3");
 
-$c4->exec("SELECT 3");
+$pool->acquire();
+$pool->acquire();
+$pool->acquire();
