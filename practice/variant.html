@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Variant Manager (CRUD + Smart Logic)</title>
+    <!-- UIKit CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.23.13/css/uikit.min.css"
+        integrity="sha512-07KxXXxQyV6pISL3wf0yWdN4Pu8N3I9FFPUAZPG3L0e/gN3LTG2OBkQ1hkKc2W45G7+eLHPJPpE5+g0pKA/d2w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --border-color: #e5e7eb;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--secondary-bg);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-sub);
+            margin-bottom: 0.5rem;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .btn-danger {
+            background-color: #fee2e2;
+            color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #fecaca;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-icon {
+            padding: 0.375rem;
+            border-radius: 4px;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .btn-icon:hover {
+            background-color: #f3f4f6;
+            color: var(--text-main);
+        }
+
+        /* Product Sidebar List */
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .product-item {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .product-item:hover {
+            border-color: var(--primary-color);
+        }
+
+        .product-item.active {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
+
+        .product-item-title {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .product-item-meta {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+        }
+
+        /* Variant Builder */
+        .variant-type-row {
+            background: #f9fafb;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .tag {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .tag i {
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .tag i:hover {
+            color: var(--danger-color);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-sub);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 4px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+
+        /* Utilities */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-sub);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 50;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Sidebar: Saved Products -->
+        <aside>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-boxes"></i> Saved Products</div>
+                    <button onclick="createNewProduct()" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i>
+                        New</button>
+                </div>
+                <div id="productList" class="product-list">
+                    <!-- Javascript will populate this -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Product Details -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-edit"></i> Product Configuration
+                        <span id="editBadge" class="badge" style="display:none; margin-left: 10px;">EDITING</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="deleteBtn" onclick="deleteProduct()" class="btn btn-danger btn-sm"
+                            style="display:none;"><i class="fas fa-trash"></i> Delete</button>
+                        <button onclick="saveProduct()" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save
+                            Product</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label">Product Name</label>
+                    <input type="text" id="productName" class="input" placeholder="e.g. Summer T-Shirt">
+                </div>
+
+                <div class="form-group">
+                    <label class="label">Variant Types (e.g. Size, Color)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="newVariantType" class="input" placeholder="Type name..."
+                            onkeypress="handleEnter(event, addVariantType)">
+                        <button onclick="addVariantType()" class="btn btn-secondary"><i class="fas fa-plus"></i> Add
+                            Type</button>
+                    </div>
+                </div>
+
+                <!-- Variant Builders -->
+                <div id="variantBuilders"></div>
+            </div>
+
+            <!-- Manual Add Section (New) -->
+            <div class="card" id="manualAddSection" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-plus-circle"></i> Add Single Combination
+                    </div>
+                    <button onclick="toggleManualAdd()" class="btn btn-secondary btn-sm"><i class="fas fa-times"></i>
+                        Close</button>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                    <div id="manualSelectors" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <!-- Selectors generated here -->
+                    </div>
+                    <button onclick="addManualCombination()" class="btn btn-primary"><i class="fas fa-check"></i> Add
+                        This Combo</button>
+                </div>
+            </div>
+
+            <!-- Generated Combinations Table -->
+            <div id="combinationsSection" class="card" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-list-ul"></i> Variants Preview
+                        <span id="comboCount" class="badge" style="margin-left: 10px;">0</span>
+                    </div>
+                    <button onclick="toggleManualAdd()" class="btn btn-secondary btn-sm"><i
+                            class="fas fa-plus-square"></i> Add Manually</button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="variantsTable">
+                        <thead>
+                            <!-- Dynamic Headers -->
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i> <span id="toastMessage">Saved successfully</span>
+    </div>
+
+    <script>
+        // ------------------------------------------------------------------
+        // State Management
+        // ------------------------------------------------------------------
+        let state = {
+            currentId: null,      // ID of product currently being edited
+            name: '',             // Product name
+            variants: {},         // { "Size": ["S", "M"], "Color": ["Red"] }
+            combinations: []      // Array of combination objects
+        };
+
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProductList();
+            renderUI();
+        });
+
+        // ------------------------------------------------------------------
+        // Logic: Variants & Combination Generation
+        // ------------------------------------------------------------------
+
+        function addVariantType() {
+            const input = document.getElementById('newVariantType');
+            const type = input.value.trim();
+
+            if (!type) return showToast('Please enter a variant type', true);
+            if (state.variants[type]) return showToast('Variant type already exists', true);
+
+            state.variants[type] = [];
+            input.value = '';
+
+            // When adding a new TYPE (structural change), we regen to add the column.
+            renderUI();
+            fullRegenerate();
+        }
+
+        function removeVariantType(type) {
+            if (!confirm(`Delete variant type "${type}"? This will clear current combinations.`)) return;
+            delete state.variants[type];
+            renderUI();
+            fullRegenerate();
+        }
+
+        function addOption(type) {
+            const input = document.getElementById(`input-${type}`);
+            const val = input.value.trim();
+
+            if (!val) return;
+            if (state.variants[type].includes(val)) return showToast('Option already exists', true);
+
+            state.variants[type].push(val);
+            input.value = '';
+
+            renderUI();
+
+            // SMART APPEND: Only add combinations for this NEW option.
+            // Do NOT run fullRegenerate() which would resurrect deleted items.
+            appendNewCombinations(type, val);
+        }
+
+        function removeOption(type, option) {
+            state.variants[type] = state.variants[type].filter(v => v !== option);
+
+            // Remove combinations that used this option
+            state.combinations = state.combinations.filter(combo => {
+                const attr = combo.attributes.find(a => a.type === type);
+                return attr.value !== option;
+            });
+
+            renderUI();
+            // Do NOT regenerate, as that would bring back other deleted items
+            renderTable();
+        }
+
+        // ------------------------------------------------------------------
+        // Smart Generation Logic
+        // ------------------------------------------------------------------
+
+        // Adds ONLY combinations involving the new Option
+        function appendNewCombinations(newType, newValue) {
+            const allTypes = Object.keys(state.variants);
+
+            // If this is the FIRST/ONLY type, just add one row
+            if (allTypes.length === 1) {
+                addComboData([{ type: newType, value: newValue }]);
+                renderTable();
+                return;
+            }
+
+            // We want to combine (NewOption) x (All Other Options)
+            const otherTypes = allTypes.filter(t => t !== newType);
+
+            // If any other type has NO options, we can't form a valid combo yet
+            if (otherTypes.some(t => state.variants[t].length === 0)) {
+                return;
+            }
+
+            const otherArrays = otherTypes.map(t => state.variants[t].map(val => ({ type: t, value: val })));
+
+            const cartesian = (a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())), [[]]);
+            const otherCombos = cartesian(otherArrays);
+
+            // Merge the new option into every "other" combo
+            otherCombos.forEach(subCombo => {
+                // subCombo is array of objects from other types
+                // Make sure to clone or create new array
+                const fullCombo = [...subCombo, { type: newType, value: newValue }];
+                addComboData(fullCombo);
+            });
+
+            renderTable();
+        }
+
+        // Full regeneration (only for structural changes like adding a Type)
+        function fullRegenerate() {
+            const types = Object.keys(state.variants);
+            if (types.length === 0 || types.some(t => state.variants[t].length === 0)) {
+                state.combinations = [];
+                renderTable();
+                return;
+            }
+
+            // Keep existing data map to preserve prices etc
+            const existingMap = new Map();
+            state.combinations.forEach(c => existingMap.set(getCombinationKey(c.attributes), c));
+
+            // Full Cartesian
+            const arrays = types.map(t => state.variants[t].map(val => ({ type: t, value: val })));
+            const cartesian = (a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())), [[]]);
+            const allCombos = cartesian(arrays);
+
+            // Merge
+            state.combinations = allCombos.map(attrs => {
+                // Sort to ensure key match
+                attrs.sort((a, b) => a.type.localeCompare(b.type));
+                const key = getCombinationKey(attrs);
+                const known = existingMap.get(key);
+
+                if (known) return { ...known, attributes: attrs };
+
+                return {
+                    id: crypto.randomUUID(),
+                    attributes: attrs,
+                    amount: 0,
+                    inventory: 0,
+                    track: true
+                };
+            });
+            renderTable();
+        }
+
+        function addComboData(attributes) {
+            attributes.sort((a, b) => a.type.localeCompare(b.type));
+            const key = getCombinationKey(attributes);
+            const exists = state.combinations.some(c => getCombinationKey(c.attributes) === key);
+
+            if (!exists) {
+                state.combinations.push({
+                    id: crypto.randomUUID(),
+                    attributes: attributes,
+                    amount: 0,
+                    inventory: 0,
+                    track: true
+                });
+            }
+        }
+
+        function getCombinationKey(attributes) {
+            // Sort first to be safe
+            const sorted = [...attributes].sort((a, b) => a.type.localeCompare(b.type));
+            return sorted.map(a => `${a.type}:${a.value}`).join('|');
+        }
+
+        // ------------------------------------------------------------------
+        // Manual Add Logic
+        // ------------------------------------------------------------------
+
+        function toggleManualAdd() {
+            const sec = document.getElementById('manualAddSection');
+            if (sec.style.display === 'none') {
+                sec.style.display = 'block';
+                renderManualSelectors();
+            } else {
+                sec.style.display = 'none';
+            }
+        }
+
+        function renderManualSelectors() {
+            const container = document.getElementById('manualSelectors');
+            if (Object.keys(state.variants).length === 0) {
+                container.innerHTML = '<span style="color:var(--text-sub)">No variants defined.</span>';
+                return;
+            }
+
+            container.innerHTML = Object.keys(state.variants).map(type => `
+            <div style="display:flex; flex-direction:column;">
+                <label style="font-size:0.75rem; font-weight:600; margin-bottom:4px;">${type}</label>
+                <select id="select-manual-${type}" class="input" style="padding:6px; min-width:120px;">
+                    ${state.variants[type].map(v => `<option value="${v}">${v}</option>`).join('')}
+                </select>
+            </div>
+        `).join('');
+        }
+
+        function addManualCombination() {
+            const types = Object.keys(state.variants);
+            if (types.length === 0) return showToast('No variants defined', true);
+
+            // Collect values from selectors
+            const attributes = [];
+            for (const type of types) {
+                const el = document.getElementById(`select-manual-${type}`);
+                if (!el || !el.value) return showToast(`Please select a ${type}`, true);
+                attributes.push({ type, value: el.value });
+            }
+
+            // Check if exists
+            attributes.sort((a, b) => a.type.localeCompare(b.type));
+            const key = getCombinationKey(attributes);
+            if (state.combinations.some(c => getCombinationKey(c.attributes) === key)) {
+                return showToast('Combination already exists', true);
+            }
+
+            addComboData(attributes);
+            renderTable();
+            showToast('Combination Added');
+        }
+
+        // ------------------------------------------------------------------
+        // CRUD Logic
+        // ------------------------------------------------------------------
+
+        function getStorage() {
+            try {
+                return JSON.parse(localStorage.getItem('products_db') || '[]');
+            } catch (e) { return []; }
+        }
+
+        function saveStorage(data) {
+            localStorage.setItem('products_db', JSON.stringify(data));
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('productName').value.trim();
+            if (!name) return showToast('Please enter a product name', true);
+
+            state.name = name; // Sync name
+
+            const db = getStorage();
+            const productData = {
+                id: state.currentId || crypto.randomUUID(),
+                name: state.name,
+                variants: state.variants,
+                combinations: state.combinations,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (state.currentId) {
+                const index = db.findIndex(p => p.id === state.currentId);
+                if (index !== -1) db[index] = productData;
+                else db.push(productData);
+            } else {
+                state.currentId = productData.id;
+                db.push(productData);
+            }
+
+            saveStorage(db);
+            showToast('Product Saved!');
+
+            renderProductList();
+            renderUI();
+        }
+
+        function deleteProduct() {
+            if (!state.currentId || !confirm('Permanently delete this product?')) return;
+
+            const db = getStorage().filter(p => p.id !== state.currentId);
+            saveStorage(db);
+
+            createNewProduct();
+            showToast('Product Deleted');
+        }
+
+        function loadProduct(id) {
+            const product = getStorage().find(p => p.id === id);
+            if (!product) return;
+
+            state = {
+                currentId: product.id,
+                name: product.name,
+                variants: product.variants || {},
+                combinations: product.combinations || []
+            };
+
+            renderUI();
+            renderTable();
+            // Clear manual section if open
+            document.getElementById('manualAddSection').style.display = 'none';
+            renderProductList();
+        }
+
+        function createNewProduct() {
+            state = {
+                currentId: null,
+                name: '',
+                variants: {},
+                combinations: []
+            };
+            renderUI();
+            renderTable();
+            document.getElementById('manualAddSection').style.display = 'none';
+            renderProductList();
+        }
+
+        // ------------------------------------------------------------------
+        // Rendering & Helpers
+        // ------------------------------------------------------------------
+
+        function renderUI() {
+            // Product Name
+            document.getElementById('productName').value = state.name;
+
+            // Buttons
+            const isEditing = !!state.currentId;
+            document.getElementById('editBadge').style.display = isEditing ? 'inline-block' : 'none';
+            document.getElementById('deleteBtn').style.display = isEditing ? 'inline-flex' : 'none';
+
+            // Variant Types
+            const container = document.getElementById('variantBuilders');
+            container.innerHTML = Object.keys(state.variants).map(type => `
+            <div class="variant-type-row">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:600;">${type}</span>
+                    <i onclick="removeVariantType('${type}')" class="fas fa-trash btn-icon" title="Remove Type"></i>
+                </div>
+                <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+                    <input type="text" id="input-${type}" class="input" style="padding:0.4rem;" 
+                           placeholder="Add option..." onkeypress="handleEnter(event, () => addOption('${type}'))">
+                    <button onclick="addOption('${type}')" class="btn btn-secondary btn-sm">Add</button>
+                </div>
+                <div class="tags-container">
+                    ${state.variants[type].map(val => `
+                        <span class="tag">
+                            ${val} <i onclick="removeOption('${type}', '${val}')" class="fas fa-times"></i>
+                        </span>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const section = document.getElementById('combinationsSection');
+            const count = document.getElementById('comboCount');
+            const table = document.getElementById('variantsTable');
+
+            if (state.combinations.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            count.innerText = state.combinations.length;
+
+            // Headers based on first combination found (or just use variant keys to be consistent)
+            // Using variant keys is safer for column order
+            const types = Object.keys(state.variants);
+            if (types.length === 0 && state.combinations.length > 0) {
+                // Edge case: Maybe combinations exist but types deleted?
+                // Use attributes from first combo
+            }
+
+            // Better: Use the keys from state.variants to determine columns, 
+            // ensuring we show columns even if some attribute is missing in a specific row (unlikely but safe)
+            const headerHtml = types.map(t => `<th>${t}</th>`).join('');
+
+            table.querySelector('thead').innerHTML = `
+            <tr>
+                ${headerHtml}
+                <th>Amount ($)</th>
+                <th>Inventory</th>
+                <th style="text-align:center">Track</th>
+                <th></th>
+            </tr>
+        `;
+
+            table.querySelector('tbody').innerHTML = state.combinations.map((combo, idx) => {
+                // Map attributes to columns based on types order
+                const attrCells = types.map(type => {
+                    const attr = combo.attributes.find(a => a.type === type);
+                    return `<td><strong>${attr ? attr.value : '-'}</strong></td>`;
+                }).join('');
+
+                return `
+                <tr>
+                    ${attrCells}
+                    <td>
+                        <input type="number" step="0.01" class="input" value="${combo.amount}" 
+                            onchange="updateCombo(${idx}, 'amount', this.value)">
+                    </td>
+                    <td>
+                        <input type="number" class="input" value="${combo.inventory}" 
+                            onchange="updateCombo(${idx}, 'inventory', this.value)">
+                    </td>
+                    <td style="text-align:center">
+                        <input type="checkbox" class="checkbox" ${combo.track ? 'checked' : ''} 
+                            onchange="updateCombo(${idx}, 'track', this.checked)">
+                    </td>
+                    <td>
+                        <i onclick="deleteCombo(${idx})" class="fas fa-trash btn-icon" style="color:var(--danger-color)"></i>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function renderProductList() {
+            const list = document.getElementById('productList');
+            const db = getStorage();
+
+            if (db.length === 0) {
+                list.innerHTML = '<div class="empty-state">No saved products</div>';
+                return;
+            }
+
+            list.innerHTML = db.map(p => `
+            <div class="product-item ${p.id === state.currentId ? 'active' : ''}" onclick="loadProduct('${p.id}')">
+                <div class="product-item-title">${p.name}</div>
+                <div class="product-item-meta">
+                    ${Object.keys(p.variants || {}).join(', ')} • ${p.combinations?.length || 0} Variants
+                </div>
+            </div>
+        `).join('');
+        }
+
+        function updateCombo(index, field, value) {
+            if (field === 'track') state.combinations[index][field] = value;
+            else state.combinations[index][field] = Number(value);
+        }
+
+        function deleteCombo(index) {
+            state.combinations.splice(index, 1);
+            renderTable();
+        }
+
+        function handleEnter(e, cb) {
+            if (e.key === 'Enter') cb();
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            const m = document.getElementById('toastMessage');
+            t.style.backgroundColor = isError ? 'var(--danger-color)' : 'var(--success-color)';
+            m.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+    </script>
+
+</body>
+
+</html>
