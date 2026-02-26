@@ -98,7 +98,6 @@ class EnemyFlyweight {
     }
 }
 
-
 /**
  * =========================
  * Normal Approach

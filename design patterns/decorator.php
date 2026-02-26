@@ -1,5 +1,29 @@
 <?php
 
+
+class Room{
+
+    private $name;
+    private $cnic;
+
+    public function __construct($name, $cnic)
+    {
+        $this->name = $name;
+        $this->cnic = $cnic;
+    }
+
+    public function getDescription()
+    {
+        return "A simple room";
+    }
+
+    public function getCost()
+    {
+        return 100;
+    }
+
+} 
+
 abstract class RoomDecorator extends Room{
     protected $room;
 
@@ -48,28 +72,6 @@ class Russian extends RoomDecorator{
     }
 }
 
-class Room{
-
-    private $name;
-    private $cnic;
-
-    public function __construct($name, $cnic)
-    {
-        $this->name = $name;
-        $this->cnic = $cnic;
-    }
-
-    public function getDescription()
-    {
-        return "A simple room";
-    }
-
-    public function getCost()
-    {
-        return 100;
-    }
-
-} 
 
 
 $room = new Room("John Doe", "12345");
