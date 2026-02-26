@@ -1,0 +1,80 @@
+<?php
+
+abstract class RoomDecorator extends Room{
+    protected $room;
+
+    public function __construct(Room $room)
+    {
+        $this->room = $room;
+    }
+}
+
+class Wifi extends RoomDecorator{
+
+    public function getDescription()
+    {
+        return $this->room->getDescription() . " with Wifi";
+    }
+
+    public function getCost()
+    {
+        return $this->room->getCost() + 20;
+    }
+}
+
+class Seaview extends RoomDecorator{
+
+    public function getDescription()
+    {
+        return $this->room->getDescription() . " with Seaview";
+    }
+
+    public function getCost()
+    {
+        return $this->room->getCost() + 50;
+    }
+}
+
+class Russian extends RoomDecorator{
+
+    public function getDescription()
+    {
+        return $this->room->getDescription() . " with Russian";
+    }
+
+    public function getCost()
+    {
+        return $this->room->getCost() + 6000;
+    }
+}
+
+class Room{
+
+    private $name;
+    private $cnic;
+
+    public function __construct($name, $cnic)
+    {
+        $this->name = $name;
+        $this->cnic = $cnic;
+    }
+
+    public function getDescription()
+    {
+        return "A simple room";
+    }
+
+    public function getCost()
+    {
+        return 100;
+    }
+
+} 
+
+
+$room = new Room("John Doe", "12345");
+$room = new Wifi($room);
+$room = new Seaview($room);
+$room = new Russian($room);
+
+print $room->getDescription() . " costs $" . $room->getCost() . PHP_EOL;
