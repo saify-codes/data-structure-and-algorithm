@@ -1,16 +1,20 @@
 <?php
 
-
-class Room{
-
-    private $name;
-    private $cnic;
+abstract class Room {
+    protected $name;
+    protected $cnic;
 
     public function __construct($name, $cnic)
     {
         $this->name = $name;
         $this->cnic = $cnic;
     }
+
+    abstract public function getDescription();
+    abstract public function getCost();
+}
+
+class BasicRoom extends Room {
 
     public function getDescription()
     {
@@ -21,10 +25,9 @@ class Room{
     {
         return 100;
     }
+}
 
-} 
-
-abstract class RoomDecorator extends Room{
+abstract class RoomDecorator extends Room {
     protected $room;
 
     public function __construct(Room $room)
@@ -33,7 +36,7 @@ abstract class RoomDecorator extends Room{
     }
 }
 
-class Wifi extends RoomDecorator{
+class Wifi extends RoomDecorator {
 
     public function getDescription()
     {
@@ -46,7 +49,7 @@ class Wifi extends RoomDecorator{
     }
 }
 
-class Seaview extends RoomDecorator{
+class Seaview extends RoomDecorator {
 
     public function getDescription()
     {
@@ -59,7 +62,7 @@ class Seaview extends RoomDecorator{
     }
 }
 
-class Russian extends RoomDecorator{
+class Russian extends RoomDecorator {
 
     public function getDescription()
     {
@@ -72,11 +75,11 @@ class Russian extends RoomDecorator{
     }
 }
 
-
-
-$room = new Room("John Doe", "12345");
+$room = new BasicRoom("John Doe", "12345");
 $room = new Wifi($room);
 $room = new Seaview($room);
 $room = new Russian($room);
 
 print $room->getDescription() . " costs $" . $room->getCost() . PHP_EOL;
+
+?>

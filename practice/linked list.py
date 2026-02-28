@@ -66,6 +66,20 @@ class LinkedList:
         
         self.size += 1
             
-    
+    def reverse(self):
+        
+        prev = None
+        next = None
+        current = self.head
+        
+        while current:
+            
+            next = current.next
+            current.next = prev
+            prev = current
+            current = next
+            
+        self.tail = self.head
+        self.head = prev
         
         
