@@ -1,82 +1,68 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| 1. Iterator Interface
-|--------------------------------------------------------------------------
-*/
-
-interface MyIterator
+// 1. _Iterator Interface
+interface _Iterator
 {
     public function hasNext(): bool;
-    public function next(): mixed;
+    public function next();
 }
 
-/*
-|--------------------------------------------------------------------------
-| 2. Collection Interface
-|--------------------------------------------------------------------------
-*/
-
-interface MyCollection
+// 2. Aggregate Interface
+interface _Iterable
 {
-    public function createIterator(): MyIterator;
+    public function createIterator(): _Iterator;
 }
 
-/*
-|--------------------------------------------------------------------------
-| 3. Concrete Iterator
-|--------------------------------------------------------------------------
-*/
-
-class NameIterator implements MyIterator
+// 3. Concrete Aggregate
+class BookCollection implements _Iterable
 {
+    private array $books = [];
+
+    public function add(string $book): void
+    {
+        $this->books[] = $book;
+    }
+
+    public function getItems(): array
+    {
+        return $this->books;
+    }
+
+    public function createIterator(): _Iterator
+    {
+        return new BookIterator($this);
+    }
+}
+
+// 4. Concrete _Iterator
+class BookIterator implements _Iterator
+{
+    private array $items;
     private int $position = 0;
 
-    public function __construct(private array $items) {}
+    public function __construct(BookCollection $collection)
+    {
+        $this->items = $collection->getItems();
+    }
 
     public function hasNext(): bool
     {
         return $this->position < count($this->items);
     }
 
-    public function next(): mixed
+    public function next()
     {
         return $this->items[$this->position++];
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| 4. Concrete Collection
-|--------------------------------------------------------------------------
-*/
 
-class NameCollection implements MyCollection
-{
-    private array $names = [];
+// 5. Client Code
 
-    public function add(string $name): void
-    {
-        $this->names[] = $name;
-    }
-
-    public function createIterator(): MyIterator
-    {
-        return new NameIterator($this->names);
-    }
-}
-
-/*
-|--------------------------------------------------------------------------
-| 5. Usage
-|--------------------------------------------------------------------------
-*/
-
-$collection = new NameCollection();
-$collection->add("Ali");
-$collection->add("Ahmed");
-$collection->add("Sara");
+$collection = new BookCollection();
+$collection->add("Clean Code");
+$collection->add("Design Patterns");
+$collection->add("Refactoring");
 
 $iterator = $collection->createIterator();
 
