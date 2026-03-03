@@ -1,71 +1,74 @@
 <?php
 
-// 1. _Iterator Interface
 interface _Iterator
 {
     public function hasNext(): bool;
-    public function next();
+    public function next(): mixed;
 }
 
-// 2. Aggregate Interface
 interface _Iterable
 {
-    public function createIterator(): _Iterator;
+    public function getIterator(): _Iterator;
 }
 
-// 3. Concrete Aggregate
-class BookCollection implements _Iterable
+
+class _ArrayIterator implements _Iterator
 {
-    private array $books = [];
+    private $array;
+    private $position;
 
-    public function add(string $book): void
-    {
-        $this->books[] = $book;
+
+    public function __construct(array $array) {
+        $this->array = $array;
+        $this->position = 0;
     }
 
-    public function getItems(): array
+    public function hasNext():bool
     {
-        return $this->books;
+        return $this->position < count($this->array);
     }
 
-    public function createIterator(): _Iterator
+    public function next():mixed
     {
-        return new BookIterator($this);
+        return $this->array[$this->position++];
     }
+
 }
 
-// 4. Concrete _Iterator
-class BookIterator implements _Iterator
-{
-    private array $items;
-    private int $position = 0;
+class Song{
 
-    public function __construct(BookCollection $collection)
-    {
-        $this->items = $collection->getItems();
+    public function __construct(public $name, public $artist) {}
+    
+}
+
+class Playlist implements _Iterable{
+
+    private $songs = [];
+
+    public function add(Song $song){
+        $this->songs[] = $song;
+    }
+    
+    public function remove(Song $song){
+        $this->songs = array_filter($this->songs, fn($target) => $song != $target);
     }
 
-    public function hasNext(): bool
+    public function getIterator(): _Iterator
     {
-        return $this->position < count($this->items);
+        return new _ArrayIterator($this->songs);
     }
 
-    public function next()
-    {
-        return $this->items[$this->position++];
-    }
 }
 
 
-// 5. Client Code
+$playlist = new Playlist();
+$playlist->add(new Song("Often", "the weekend"));
+$playlist->add(new Song("Blinding Lights", "The Weeknd"));
+$playlist->add(new Song("Save Your Tears", "The Weeknd"));
 
-$collection = new BookCollection();
-$collection->add("Clean Code");
-$collection->add("Design Patterns");
-$collection->add("Refactoring");
-
-$iterator = $collection->createIterator();
+$iterator = $playlist->getIterator();
 
 while ($iterator->hasNext()) {
-    echo $iterator->next() . PHP_EOL;
+    $song = $iterator->next();
+    echo "Playing: {$song->name} by {$song->artist}\n";
 }
