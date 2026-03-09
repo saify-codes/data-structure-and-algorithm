@@ -1,91 +1,128 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| 1. Memento (State Snapshot)
-|--------------------------------------------------------------------------
-*/
+class Memento{
+    
+    private $state;
 
-class EditorMemento
-{
-    public function __construct(private string $content) {}
-
-    public function getContent(): string
+    public function __construct(Player $player)
     {
-        return $this->content;
+        $this->state = clone $player;
+    }
+
+    public function getState(): Player
+    {
+        return $this->state;
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| 2. Originator (Real Object)
-|--------------------------------------------------------------------------
-*/
+class Caretaker{
 
-class TextEditor
-{
-    private string $content = '';
+    private $mementos = [];
+    private $originator;
 
-    public function write(string $text): void
+    public function __construct(Player $originator)
     {
-        $this->content .= $text;
+        $this->originator = $originator;
     }
 
-    public function getContent(): string
-    {
-        return $this->content;
+    public function backup(){
+        $this->mementos[] = $this->originator->save();
     }
 
-    public function save(): EditorMemento
+    public function restore(){
+        $memento = array_pop($this->mementos);
+        if ($memento) {
+            $this->originator->restore($memento);
+        }
+    }
+    
+}
+
+class Player{
+
+    private $speed;
+    private $height;
+    private $weight;
+    private $bio;
+
+    public function __construct(float $speed, float $height, float $weight, string $bio)
     {
-        return new EditorMemento($this->content);
+        $this->speed = $speed;
+        $this->height = $height;
+        $this->weight = $weight;
+        $this->bio = $bio;
     }
 
-    public function restore(EditorMemento $memento): void
+    public function getSpeed(): float
     {
-        $this->content = $memento->getContent();
+        return $this->speed;
+    }
+
+    public function getHeight(): float
+    {
+        return $this->height;
+    }
+
+    public function getWeight(): float
+    {
+        return $this->weight;
+    }
+
+    public function getBio(): string
+    {
+        return $this->bio;
+    }
+
+    public function setSpeed(float $speed): void
+    {
+        $this->speed = $speed;
+    }
+
+    public function setHeight(float $height): void
+    {
+        $this->height = $height;
+    }
+
+    public function setWeight(float $weight): void
+    {
+        $this->weight = $weight;
+    }
+
+    public function setBio(string $bio): void
+    {
+        $this->bio = $bio;
+    }
+
+    public function save(): Memento
+    {
+        return new Memento($this);
+    }
+
+    public function restore(Memento $memento): void
+    {
+        $state          = $memento->getState();
+        $this->speed    = $state->getSpeed();
+        $this->height   = $state->getHeight();
+        $this->weight   = $state->getWeight();
+        $this->bio      = $state->getBio();
+    }
+
+    public function __toString()
+    {
+        return sprintf("Player details: Speed: %.2f, Height: %.2f, Weight: %.2f, Bio: %s" . PHP_EOL, $this->speed, $this->height, $this->weight, $this->bio);
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| 3. Caretaker (History Manager)
-|--------------------------------------------------------------------------
-*/
 
-class History
-{
-    private array $snapshots = [];
+$player     = new Player(36, 6, 65, "Name: ali, gender: male, cnic: 4240128978681");
+$caretaker  = new Caretaker($player);
 
-    public function push(EditorMemento $memento): void
-    {
-        $this->snapshots[] = $memento;
-    }
+$caretaker->backup();
+$player->setSpeed(40);
+$player->setHeight(6.2);
+$player->setWeight(70);
 
-    public function pop(): ?EditorMemento
-    {
-        return array_pop($this->snapshots);
-    }
-}
+print $player;
+$caretaker->restore();
+print $player;
 
-/*
-|--------------------------------------------------------------------------
-| 4. Usage
-|--------------------------------------------------------------------------
-*/
-
-$editor = new TextEditor();
-$history = new History();
-
-$editor->write("Hello");
-$history->push($editor->save());
-
-$editor->write(" World");
-$history->push($editor->save());
-
-echo "Current: " . $editor->getContent() . "\n";
-
-/* Undo */
-$editor->restore($history->pop());
-
-echo "After Undo: " . $editor->getContent() . "\n";
