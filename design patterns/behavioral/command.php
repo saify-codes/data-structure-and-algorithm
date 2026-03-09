@@ -4,6 +4,27 @@
 |--------------------------------------------------------------------------
 | 1. Command Interface
 |--------------------------------------------------------------------------
+| Kyu use karte hain?
+|
+| 1. Sender aur receiver ko alag karne ke liye
+
+| Jo action trigger kar raha hai usko actual logic ka pata hona zaroori nahi.
+
+| 2. Flexible code ke liye
+
+| Same invoker different commands chala sakta hai.
+
+| 3. Undo/Redo ke liye
+
+| Har action object me execute() aur undo() rakh sakte ho.
+
+| 4. Queue / job system ke liye
+
+| Commands ko later execute kar sakte ho.
+
+| 5. Clean architecture ke liye
+
+| Business action ko alag classes me tod dete ho.
 */
 
 interface _Command
