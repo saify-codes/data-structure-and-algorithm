@@ -4,6 +4,7 @@
 |--------------------------------------------------------------------------
 | 1. Observer Interface
 |--------------------------------------------------------------------------
+|Subject → notify() → update()
 */
 
 interface Observer
@@ -71,7 +72,9 @@ class YouTubeChannel implements Subject
 
 class Subscriber implements Observer
 {
-    public function __construct(private string $name) {}
+    public function __construct(private string $name)
+    {
+    }
 
     public function update(string $message): void
     {
