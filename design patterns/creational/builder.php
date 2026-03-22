@@ -105,6 +105,7 @@ function clientCode(SQLQueryBuilder $queryBuilder)
         ->select("users", ["name", "email", "password"])
         ->where("id", "1")
         ->where("active", "1")
+        ->where("deleted", "0")
         ->limit(0, 10)
         ->getSQL();
 
