@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product CRUD with Variants</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: #111827;
+            color: #fff;
+            padding: 20px;
+            border-right: 1px solid #1f2937;
+            overflow: auto;
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-dark {
+            background: #1f2937;
+            color: #fff;
+        }
+
+        .sidebar .btn {
+            width: 100%;
+            margin-bottom: 14px;
+        }
+
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+        }
+
+        .product-card.active {
+            border-color: #60a5fa;
+            background: rgba(37, 99, 235, 0.18);
+        }
+
+        .product-card-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .product-card-sub {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        .content {
+            padding: 24px;
+            overflow: auto;
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .panel h2,
+        .panel h3 {
+            margin-top: 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .field input,
+        .field textarea,
+        .field select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .field textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .option-card,
+        .variant-card {
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .option-header,
+        .variant-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .option-values {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .value-row {
+            display: grid;
+            grid-template-columns: 1fr 120px 120px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .table-wrap {
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f3f4f6;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 999px;
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .empty {
+            padding: 24px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            color: #64748b;
+            text-align: center;
+            background: #f8fafc;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .json-box {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            overflow: auto;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                border-right: 0;
+                border-bottom: 1px solid #1f2937;
+            }
+
+            .grid-2,
+            .grid-3,
+            .value-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <h2>Products</h2>
+            <button class="btn btn-primary" id="newProductBtn">+ New Product</button>
+            <div class="product-list" id="productList"></div>
+        </aside>
+
+        <main class="content">
+            <div class="panel">
+                <div class="actions">
+                    <button class="btn btn-primary" id="saveProductBtn">Save Product</button>
+                    <button class="btn btn-secondary" id="generateVariantsBtn">Generate Variants</button>
+                    <button class="btn btn-secondary" id="resetFormBtn">Reset Form</button>
+                    <button class="btn btn-danger" id="deleteProductBtn">Delete Product</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Product Details</h2>
+                <div class="grid-2">
+                    <div class="field">
+                        <label>Title</label>
+                        <input id="productTitle" placeholder="Round Neck T-Shirt" />
+                    </div>
+                    <div class="field">
+                        <label>Slug</label>
+                        <input id="productSlug" placeholder="round-neck-t-shirt" />
+                    </div>
+                    <div class="field">
+                        <label>Brand</label>
+                        <input id="productBrand" placeholder="My Brand" />
+                    </div>
+                    <div class="field">
+                        <label>Category</label>
+                        <input id="productCategory" placeholder="Apparel" />
+                    </div>
+                    <div class="field">
+                        <label>Status</label>
+                        <select id="productStatus">
+                            <option value="active">active</option>
+                            <option value="draft">draft</option>
+                            <option value="archived">archived</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Base SKU</label>
+                        <input id="productBaseSku" placeholder="TSHIRT" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Description</label>
+                    <textarea id="productDescription" placeholder="Product description"></textarea>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="option-header">
+                    <h3>Options</h3>
+                    <button class="btn btn-dark" id="addOptionBtn">+ Add Option</button>
+                </div>
+                <div id="optionsContainer"></div>
+            </div>
+
+            <div class="panel">
+                <div class="variant-header">
+                    <h3>Variants</h3>
+                    <div class="muted">Generate combinations from option values, then edit variant data.</div>
+                </div>
+                <div id="variantsContainer"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Frontend Payload Preview</h3>
+                <div class="json-box">
+                    <pre id="payloadPreview"></pre>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "product_crud_variants_demo_v1";
+
+        const demoProducts = [
+            {
+                id: generateId(),
+                title: "Round Neck T-Shirt",
+                slug: "round-neck-t-shirt",
+                brand: "My Brand",
+                category: "Apparel",
+                description: "Premium t-shirt demo product",
+                status: "active",
+                base_sku: "TSH",
+                options: [
+                    {
+                        id: generateId(),
+                        name: "Color",
+                        position: 1,
+                        values: [
+                            { id: generateId(), value: "Red", position: 1 },
+                            { id: generateId(), value: "Blue", position: 2 }
+                        ]
+                    },
+                    {
+                        id: generateId(),
+                        name: "Size",
+                        position: 2,
+                        values: [
+                            { id: generateId(), value: "S", position: 1 },
+                            { id: generateId(), value: "M", position: 2 },
+                            { id: generateId(), value: "L", position: 3 }
+                        ]
+                    }
+                ],
+                variants: []
+            }
+        ];
+
+        const state = {
+            products: loadProducts(),
+            selectedProductId: null,
+            formProduct: createEmptyProduct()
+        };
+
+        const els = {
+            productList: document.getElementById("productList"),
+            newProductBtn: document.getElementById("newProductBtn"),
+            saveProductBtn: document.getElementById("saveProductBtn"),
+            generateVariantsBtn: document.getElementById("generateVariantsBtn"),
+            resetFormBtn: document.getElementById("resetFormBtn"),
+            deleteProductBtn: document.getElementById("deleteProductBtn"),
+
+            productTitle: document.getElementById("productTitle"),
+            productSlug: document.getElementById("productSlug"),
+            productBrand: document.getElementById("productBrand"),
+            productCategory: document.getElementById("productCategory"),
+            productDescription: document.getElementById("productDescription"),
+            productStatus: document.getElementById("productStatus"),
+            productBaseSku: document.getElementById("productBaseSku"),
+
+            optionsContainer: document.getElementById("optionsContainer"),
+            addOptionBtn: document.getElementById("addOptionBtn"),
+            variantsContainer: document.getElementById("variantsContainer"),
+            payloadPreview: document.getElementById("payloadPreview")
+        };
+
+        function generateId() {
+            return Math.floor(Math.random() * 1000000000);
+        }
+
+        function slugify(text) {
+            return (text || "")
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9\s-]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-");
+        }
+
+        function loadProducts() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) return JSON.parse(saved);
+
+            const seeded = JSON.parse(JSON.stringify(demoProducts));
+            seeded[0].variants = generateVariantsFromOptions(seeded[0], []);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+            return seeded;
+        }
+
+        function saveProducts() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state.products));
+        }
+
+        function createEmptyProduct() {
+            return {
+                id: null,
+                title: "",
+                slug: "",
+                brand: "",
+                category: "",
+                description: "",
+                status: "active",
+                base_sku: "",
+                options: [],
+                variants: []
+            };
+        }
+
+        function clone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        function init() {
+            renderProductList();
+            bindTopActions();
+
+            if (state.products.length) {
+                selectProduct(state.products[0].id);
+            } else {
+                setFormProduct(createEmptyProduct());
+            }
+        }
+
+        function bindTopActions() {
+            els.newProductBtn.addEventListener("click", () => {
+                state.selectedProductId = null;
+                setFormProduct(createEmptyProduct());
+            });
+
+            els.resetFormBtn.addEventListener("click", () => {
+                if (state.selectedProductId) {
+                    const p = state.products.find(x => x.id === state.selectedProductId);
+                    setFormProduct(clone(p));
+                } else {
+                    setFormProduct(createEmptyProduct());
+                }
+            });
+
+            els.saveProductBtn.addEventListener("click", saveCurrentProduct);
+            els.generateVariantsBtn.addEventListener("click", regenerateVariants);
+            els.deleteProductBtn.addEventListener("click", deleteCurrentProduct);
+
+            els.addOptionBtn.addEventListener("click", () => {
+                state.formProduct.options.push({
+                    id: generateId(),
+                    name: "",
+                    position: state.formProduct.options.length + 1,
+                    values: []
+                });
+                renderOptions();
+                renderPayloadPreview();
+            });
+
+            [
+                ["productTitle", "title"],
+                ["productSlug", "slug"],
+                ["productBrand", "brand"],
+                ["productCategory", "category"],
+                ["productDescription", "description"],
+                ["productStatus", "status"],
+                ["productBaseSku", "base_sku"]
+            ].forEach(([id, key]) => {
+                els[id].addEventListener("input", e => {
+                    state.formProduct[key] = e.target.value;
+
+                    if (key === "title" && !els.productSlug.dataset.touched) {
+                        state.formProduct.slug = slugify(e.target.value);
+                        els.productSlug.value = state.formProduct.slug;
+                    }
+
+                    renderPayloadPreview();
+                    renderProductList();
+                });
+            });
+
+            els.productSlug.addEventListener("input", () => {
+                els.productSlug.dataset.touched = "1";
+            });
+        }
+
+        function setFormProduct(product) {
+            state.formProduct = clone(product);
+            fillForm();
+            renderOptions();
+            renderVariants();
+            renderPayloadPreview();
+            renderProductList();
+        }
+
+        function fillForm() {
+            els.productTitle.value = state.formProduct.title || "";
+            els.productSlug.value = state.formProduct.slug || "";
+            els.productBrand.value = state.formProduct.brand || "";
+            els.productCategory.value = state.formProduct.category || "";
+            els.productDescription.value = state.formProduct.description || "";
+            els.productStatus.value = state.formProduct.status || "active";
+            els.productBaseSku.value = state.formProduct.base_sku || "";
+            els.productSlug.dataset.touched = state.formProduct.slug ? "1" : "";
+        }
+
+        function renderProductList() {
+            els.productList.innerHTML = "";
+
+            if (!state.products.length) {
+                els.productList.innerHTML = `<div class="empty">No products found</div>`;
+                return;
+            }
+
+            state.products.forEach(product => {
+                const card = document.createElement("div");
+                card.className = "product-card" + (product.id === state.selectedProductId ? " active" : "");
+                card.innerHTML = `
+          <div class="product-card-title">${escapeHtml(product.title || "Untitled Product")}</div>
+          <div class="product-card-sub">${escapeHtml(product.brand || "-")} | ${escapeHtml(product.category || "-")}</div>
+          <div class="product-card-sub">${product.variants?.length || 0} variants</div>
+        `;
+                card.addEventListener("click", () => selectProduct(product.id));
+                els.productList.appendChild(card);
+            });
+        }
+
+        function selectProduct(id) {
+            const product = state.products.find(p => p.id === id);
+            if (!product) return;
+            state.selectedProductId = id;
+            setFormProduct(product);
+        }
+
+        function renderOptions() {
+            els.optionsContainer.innerHTML = "";
+
+            if (!state.formProduct.options.length) {
+                els.optionsContainer.innerHTML = `<div class="empty">No options added yet</div>`;
+                return;
+            }
+
+            state.formProduct.options
+                .sort((a, b) => a.position - b.position)
+                .forEach((option, optionIndex) => {
+                    const wrap = document.createElement("div");
+                    wrap.className = "option-card";
+
+                    wrap.innerHTML = `
+            <div class="option-header">
+              <div class="row" style="flex:1;">
+                <input data-option-name="${option.id}" placeholder="Option name e.g. Color" value="${escapeAttr(option.name || "")}" style="flex:1; min-width:220px; padding:11px 12px; border:1px solid #d1d5db; border-radius:10px;">
+                <input data-option-position="${option.id}" type="number" min="1" value="${option.position}" style="width:110px; padding:11px 12px; border:1px solid #d1d5db; border-radius:10px;">
+              </div>
+              <div class="actions">
+                <button class="btn btn-secondary" data-add-value="${option.id}">+ Add Value</button>
+                <button class="btn btn-danger" data-remove-option="${option.id}">Remove Option</button>
+              </div>
+            </div>
+            <div class="option-values" id="values-${option.id}"></div>
+          `;
+
+                    els.optionsContainer.appendChild(wrap);
+
+                    const valuesWrap = wrap.querySelector(`#values-${option.id}`);
+
+                    if (!option.values.length) {
+                        valuesWrap.innerHTML = `<div class="empty">No values inside this option</div>`;
+                    } else {
+                        option.values
+                            .sort((a, b) => a.position - b.position)
+                            .forEach(value => {
+                                const row = document.createElement("div");
+                                row.className = "value-row";
+                                row.innerHTML = `
+                  <input data-value-text="${option.id}:${value.id}" value="${escapeAttr(value.value || "")}" placeholder="Value e.g. Red">
+                  <input data-value-position="${option.id}:${value.id}" type="number" min="1" value="${value.position}">
+                  <button class="btn btn-danger" data-remove-value="${option.id}:${value.id}">Remove</button>
+                `;
+                                valuesWrap.appendChild(row);
+                            });
+                    }
+                });
+
+            bindOptionEvents();
+        }
+
+        function bindOptionEvents() {
+            document.querySelectorAll("[data-option-name]").forEach(input => {
+                input.addEventListener("input", e => {
+                    const option = state.formProduct.options.find(o => o.id == e.target.dataset.optionName);
+                    option.name = e.target.value;
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-option-position]").forEach(input => {
+                input.addEventListener("input", e => {
+                    const option = state.formProduct.options.find(o => o.id == e.target.dataset.optionPosition);
+                    option.position = Number(e.target.value || 1);
+                    renderOptions();
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-add-value]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    const option = state.formProduct.options.find(o => o.id == e.target.dataset.addValue);
+                    option.values.push({
+                        id: generateId(),
+                        value: "",
+                        position: option.values.length + 1
+                    });
+                    renderOptions();
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-remove-option]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    const optionId = Number(e.target.dataset.removeOption);
+                    state.formProduct.options = state.formProduct.options.filter(o => o.id !== optionId);
+                    renderOptions();
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-value-text]").forEach(input => {
+                input.addEventListener("input", e => {
+                    const [optionId, valueId] = e.target.dataset.valueText.split(":").map(Number);
+                    const option = state.formProduct.options.find(o => o.id === optionId);
+                    const value = option.values.find(v => v.id === valueId);
+                    value.value = e.target.value;
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-value-position]").forEach(input => {
+                input.addEventListener("input", e => {
+                    const [optionId, valueId] = e.target.dataset.valuePosition.split(":").map(Number);
+                    const option = state.formProduct.options.find(o => o.id === optionId);
+                    const value = option.values.find(v => v.id === valueId);
+                    value.position = Number(e.target.value || 1);
+                    renderOptions();
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-remove-value]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    const [optionId, valueId] = e.target.dataset.removeValue.split(":").map(Number);
+                    const option = state.formProduct.options.find(o => o.id === optionId);
+                    option.values = option.values.filter(v => v.id !== valueId);
+                    renderOptions();
+                    renderPayloadPreview();
+                });
+            });
+        }
+
+        function renderVariants() {
+            els.variantsContainer.innerHTML = "";
+
+            if (!state.formProduct.variants.length) {
+                els.variantsContainer.innerHTML = `<div class="empty">No variants generated yet</div>`;
+                return;
+            }
+
+            const table = document.createElement("div");
+            table.className = "table-wrap";
+
+            table.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>SKU</th>
+              <th>Barcode</th>
+              <th>Price</th>
+              <th>Compare Price</th>
+              <th>Stock</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="variantTableBody"></tbody>
+        </table>
+      `;
+
+            els.variantsContainer.appendChild(table);
+
+            const tbody = table.querySelector("#variantTableBody");
+
+            state.formProduct.variants.forEach(variant => {
+                const tr = document.createElement("tr");
+
+                const optionText = (variant.selected_options || [])
+                    .map(x => `${x.option_name}: ${x.value}`)
+                    .join(", ");
+
+                tr.innerHTML = `
+          <td>
+            <div style="font-weight:700;">${escapeHtml(variant.title || "-")}</div>
+            <div class="muted">${escapeHtml(optionText)}</div>
+          </td>
+          <td><input data-variant-sku="${variant.id}" value="${escapeAttr(variant.sku || "")}"></td>
+          <td><input data-variant-barcode="${variant.id}" value="${escapeAttr(variant.barcode || "")}"></td>
+          <td><input data-variant-price="${variant.id}" type="number" step="0.01" value="${variant.price ?? 0}"></td>
+          <td><input data-variant-compare="${variant.id}" type="number" step="0.01" value="${variant.compare_at_price ?? 0}"></td>
+          <td><input data-variant-stock="${variant.id}" type="number" step="1" value="${variant.stock ?? 0}"></td>
+          <td>
+            <select data-variant-active="${variant.id}">
+              <option value="true" ${variant.is_active ? "selected" : ""}>Yes</option>
+              <option value="false" ${!variant.is_active ? "selected" : ""}>No</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn btn-danger" data-remove-variant="${variant.id}">Delete</button>
+          </td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            bindVariantEvents();
+        }
+
+        function bindVariantEvents() {
+            document.querySelectorAll("[data-variant-sku]").forEach(input => {
+                input.addEventListener("input", e => {
+                    getVariantById(e.target.dataset.variantSku).sku = e.target.value;
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-variant-barcode]").forEach(input => {
+                input.addEventListener("input", e => {
+                    getVariantById(e.target.dataset.variantBarcode).barcode = e.target.value;
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-variant-price]").forEach(input => {
+                input.addEventListener("input", e => {
+                    getVariantById(e.target.dataset.variantPrice).price = Number(e.target.value || 0);
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-variant-compare]").forEach(input => {
+                input.addEventListener("input", e => {
+                    getVariantById(e.target.dataset.variantCompare).compare_at_price = Number(e.target.value || 0);
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-variant-stock]").forEach(input => {
+                input.addEventListener("input", e => {
+                    getVariantById(e.target.dataset.variantStock).stock = Number(e.target.value || 0);
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-variant-active]").forEach(select => {
+                select.addEventListener("change", e => {
+                    getVariantById(e.target.dataset.variantActive).is_active = e.target.value === "true";
+                    renderPayloadPreview();
+                });
+            });
+
+            document.querySelectorAll("[data-remove-variant]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    const id = Number(e.target.dataset.removeVariant);
+                    state.formProduct.variants = state.formProduct.variants.filter(v => v.id !== id);
+                    renderVariants();
+                    renderPayloadPreview();
+                });
+            });
+        }
+
+        function getVariantById(id) {
+            return state.formProduct.variants.find(v => v.id == id);
+        }
+
+        function validateProduct(product) {
+            if (!product.title.trim()) {
+                alert("Product title is required");
+                return false;
+            }
+
+            const optionNames = new Set();
+
+            for (const option of product.options) {
+                if (!option.name.trim()) {
+                    alert("Option name is required");
+                    return false;
+                }
+
+                const lower = option.name.trim().toLowerCase();
+                if (optionNames.has(lower)) {
+                    alert("Option names must be unique");
+                    return false;
+                }
+                optionNames.add(lower);
+
+                const valueNames = new Set();
+
+                for (const value of option.values) {
+                    if (!value.value.trim()) {
+                        alert(`Value is required inside option "${option.name}"`);
+                        return false;
+                    }
+
+                    const valueLower = value.value.trim().toLowerCase();
+                    if (valueNames.has(valueLower)) {
+                        alert(`Duplicate value "${value.value}" inside option "${option.name}"`);
+                        return false;
+                    }
+                    valueNames.add(valueLower);
+                }
+            }
+
+            const variantSkus = new Set();
+            for (const variant of product.variants) {
+                if (variant.sku && variantSkus.has(variant.sku.trim().toLowerCase())) {
+                    alert("Variant SKUs must be unique");
+                    return false;
+                }
+                if (variant.sku) variantSkus.add(variant.sku.trim().toLowerCase());
+            }
+
+            return true;
+        }
+
+        function saveCurrentProduct() {
+            const product = clone(state.formProduct);
+
+            product.title = product.title.trim();
+            product.slug = product.slug.trim() || slugify(product.title);
+
+            if (!validateProduct(product)) return;
+
+            if (!product.id) {
+                product.id = generateId();
+                state.products.unshift(product);
+                state.selectedProductId = product.id;
+            } else {
+                const index = state.products.findIndex(p => p.id === product.id);
+                if (index > -1) state.products[index] = product;
+            }
+
+            saveProducts();
+            setFormProduct(product);
+            alert("Product saved");
+        }
+
+        function deleteCurrentProduct() {
+            if (!state.formProduct.id) {
+                setFormProduct(createEmptyProduct());
+                return;
+            }
+
+            if (!confirm("Delete this product?")) return;
+
+            state.products = state.products.filter(p => p.id !== state.formProduct.id);
+            saveProducts();
+
+            if (state.products.length) {
+                selectProduct(state.products[0].id);
+            } else {
+                state.selectedProductId = null;
+                setFormProduct(createEmptyProduct());
+            }
+        }
+
+        function regenerateVariants() {
+            const product = clone(state.formProduct);
+
+            const cleanedOptions = product.options
+                .filter(o => o.name.trim() && o.values.length)
+                .map(o => ({
+                    ...o,
+                    values: o.values.filter(v => v.value.trim())
+                }))
+                .filter(o => o.values.length);
+
+            product.options = cleanedOptions;
+
+            if (!validateProduct({ ...product, variants: state.formProduct.variants })) return;
+
+            state.formProduct.options = cleanedOptions;
+            state.formProduct.variants = generateVariantsFromOptions(state.formProduct, state.formProduct.variants);
+            renderOptions();
+            renderVariants();
+            renderPayloadPreview();
+        }
+
+        function generateVariantsFromOptions(product, existingVariants) {
+            if (!product.options.length) return [];
+
+            const sortedOptions = clone(product.options).sort((a, b) => a.position - b.position);
+
+            if (sortedOptions.some(option => !option.values.length)) return [];
+
+            const combinations = buildCombinations(sortedOptions);
+            const existingMap = new Map();
+
+            (existingVariants || []).forEach(variant => {
+                existingMap.set(variant.variant_key, variant);
+            });
+
+            return combinations.map(combo => {
+                const selected_options = combo.map(item => ({
+                    option_id: item.option_id,
+                    option_name: item.option_name,
+                    value_id: item.value_id,
+                    value: item.value
+                }));
+
+                const variantKey = combo.map(x => x.value_id).join("-");
+                const title = combo.map(x => x.value).join(" / ");
+                const existing = existingMap.get(variantKey);
+
+                return {
+                    id: existing?.id || generateId(),
+                    title,
+                    variant_key: variantKey,
+                    sku: existing?.sku || buildSku(product.base_sku, combo),
+                    barcode: existing?.barcode || "",
+                    price: existing?.price ?? 0,
+                    compare_at_price: existing?.compare_at_price ?? 0,
+                    stock: existing?.stock ?? 0,
+                    is_active: existing?.is_active ?? true,
+                    selected_options
+                };
+            });
+        }
+
+        function buildCombinations(options) {
+            let result = [[]];
+
+            options.forEach(option => {
+                const next = [];
+                option.values
+                    .sort((a, b) => a.position - b.position)
+                    .forEach(value => {
+                        result.forEach(prev => {
+                            next.push([
+                                ...prev,
+                                {
+                                    option_id: option.id,
+                                    option_name: option.name,
+                                    value_id: value.id,
+                                    value: value.value
+                                }
+                            ]);
+                        });
+                    });
+                result = next;
+            });
+
+            return result;
+        }
+
+        function buildSku(baseSku, combo) {
+            const suffix = combo
+                .map(x => String(x.value).toUpperCase().replace(/\s+/g, "").slice(0, 4))
+                .join("-");
+            return [baseSku || "SKU", suffix].filter(Boolean).join("-");
+        }
+
+        function renderPayloadPreview() {
+            const payload = {
+                id: state.formProduct.id,
+                title: state.formProduct.title,
+                slug: state.formProduct.slug,
+                brand: state.formProduct.brand,
+                category: state.formProduct.category,
+                description: state.formProduct.description,
+                status: state.formProduct.status,
+                base_sku: state.formProduct.base_sku,
+                options: state.formProduct.options
+                    .sort((a, b) => a.position - b.position)
+                    .map(option => ({
+                        id: option.id,
+                        name: option.name,
+                        position: option.position,
+                        values: option.values
+                            .sort((a, b) => a.position - b.position)
+                            .map(value => ({
+                                id: value.id,
+                                value: value.value,
+                                position: value.position
+                            }))
+                    })),
+                variants: state.formProduct.variants.map(variant => ({
+                    id: variant.id,
+                    title: variant.title,
+                    variant_key: variant.variant_key,
+                    sku: variant.sku,
+                    barcode: variant.barcode,
+                    price: variant.price,
+                    compare_at_price: variant.compare_at_price,
+                    stock: variant.stock,
+                    is_active: variant.is_active,
+                    selected_options: variant.selected_options
+                }))
+            };
+
+            els.payloadPreview.textContent = JSON.stringify(payload, null, 2);
+        }
+
+        function escapeHtml(str) {
+            return String(str || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function escapeAttr(str) {
+            return escapeHtml(str).replace(/"/g, "&quot;");
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
