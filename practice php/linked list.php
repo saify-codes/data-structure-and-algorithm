@@ -146,12 +146,53 @@ class LList {
         $this->size--;
     }
 
+    public function reverse(){
+
+        $prev = null;
+        $curr = $this->head;
+        $next = null;
+
+        
+        while ($curr) {
+            
+            $next = $curr->next;
+            $curr->next = $prev;
+            $prev = $curr;
+            $curr = $next;
+        }
+        
+        $this->tail = $this->head;
+        $this->head = $prev;
+
+    }
+
+    public function reverseRecursive(){
+
+        $this->tail = $this->head;
+        $this->head = $this->reverseHelper($this->head);
+
+    }
+
     public function empty(){
         return $this->head == null && $this->tail == null;
     }
 
     public function getSize(){
         return $this->size;
+    }
+
+    private function reverseHelper($head){
+
+        if($head == null || $head->next == null){
+            return $head;
+        }
+
+        $newHead = $this->reverseHelper($head->next);
+
+        $head->next->next = $head;
+        $head->next       = null;
+
+        return $newHead;
     }
 
 }
