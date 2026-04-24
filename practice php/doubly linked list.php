@@ -2,26 +2,28 @@
 
 class Node
 {
-    public $data;
-    public $next;
+    public mixed $data;
+    public ?Node $prev;
+    public ?Node $next;
 
-    public function __construct($data)
+    public function __construct(mixed $data)
     {
         $this->data = $data;
         $this->next = null;
+        $this->prev = null;
     }
 }
 
 class LinkedList
 {
-    public  $head;
-    public  $tail;
-    private $length;
+    public  ?Node $head;
+    public  ?Node $tail;
+    private int   $length;
 
     public function __construct()
     {
-        $this->head = null;
-        $this->tail = null;
+        $this->head   = null;
+        $this->tail   = null;
         $this->length = 0;
     }
 
@@ -32,29 +34,32 @@ class LinkedList
             throw new Exception("List is empty");
         }
 
+        $node = $this->head;
+
         if ($this->head === $this->tail) {
             $this->head = null;
             $this->tail = null;
-            $this->length--;
-            return;
+        } else {
+            $this->head       = $this->head->next;
+            $this->head->prev = null;
         }
-
-        $this->head = $this->head->next;
 
         $this->length--;
 
+        return $node->data;
     }
 
     public function unshift(mixed $val)
     {
-        $newNode = new Node($val);
+        $node = new Node($val);
 
         if ($this->head === null) {
-            $this->head = $newNode;
-            $this->tail = $newNode;
+            $this->head = $node;
+            $this->tail = $node;
         } else {
-            $newNode->next = $this->head;
-            $this->head = $newNode;
+            $node->next = $this->head;
+            $this->head->prev = $node;
+            $this->head = $node;
         }
 
         $this->length++;
@@ -62,14 +67,15 @@ class LinkedList
 
     public function push(mixed $val)
     {
-        $newNode = new Node($val);
+        $node = new Node($val);
 
         if ($this->tail === null) {
-            $this->head = $newNode;
-            $this->tail = $newNode;
+            $this->head = $node;
+            $this->tail = $node;
         } else {
-            $this->tail->next = $newNode;
-            $this->tail = $newNode;
+            $this->tail->next = $node;
+            $node->prev = $this->tail;
+            $this->tail = $node;
         }
 
         $this->length++;
@@ -81,23 +87,20 @@ class LinkedList
             throw new Exception("List is empty");
         }
 
-        if ($this->head === $this->tail) {
+        $node = $this->tail;
+
+        if ($this->tail === $this->head) {
             $this->head = null;
             $this->tail = null;
-            $this->length--;
-            return;
+        } else {
+            $this->tail       = $this->tail->prev;
+            $this->tail->next = null;
         }
 
-        $curr = $this->head;
-
-        while ($curr->next !== $this->tail) {
-            $curr = $curr->next;
-        }
-
-        $curr->next = null;
-        $this->tail = $curr;
 
         $this->length--;
+
+        return $node->data;
     }
 
     public function add(int $index, mixed $val)
@@ -116,11 +119,13 @@ class LinkedList
             return;
         }
 
-        $prevNode = $this->getNode($index - 1);
+        $node = new Node($val);
+        $curr = $this->getNode($index);
 
-        $node           = new Node($val);
-        $node->next     = $prevNode->next;
-        $prevNode->next = $node;
+        $node->next = $curr;
+        $node->prev = $curr->prev;
+        $curr->prev->next = $node;
+        $curr->prev = $node;
 
         $this->length++;
     }
@@ -141,9 +146,10 @@ class LinkedList
             return;
         }
 
-        $prevNode = $this->getNode($index - 1);
+        $curr = $this->getNode($index);
 
-        $prevNode->next = $prevNode->next->next;
+        $curr->prev->next = $curr->next;
+        $curr->next->prev = $curr->prev;
 
         $this->length--;
     }
@@ -176,13 +182,16 @@ class LinkedList
 
         return $curr;
     }
-    
-
 }
 
 
 $list = new LinkedList();
 
+$list->push(10);
+$list->push(20);
+$list->push(30);
+$list->push(40);
+$list->add(2, 10000);
 
 print $list;
 print "\n";
