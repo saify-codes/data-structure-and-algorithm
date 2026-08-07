@@ -1,200 +1,339 @@
 <?php
 
+ini_set('xdebug.max_nesting_level', -1);
+
 class Node
 {
-    public mixed $data;
+    public  $data;
     public ?Node $prev;
     public ?Node $next;
 
-    public function __construct(mixed $data)
-    {
+    public function __construct(
+        $data,
+        ?Node $prev = null,
+        ?Node $next = null
+    ) {
         $this->data = $data;
-        $this->next = null;
-        $this->prev = null;
+        $this->prev = $prev;
+        $this->next = $next;
     }
 }
 
-class LinkedList
+
+class DoublyLinkedList implements Countable, IteratorAggregate
 {
-    public  ?Node $head;
-    public  ?Node $tail;
-    private int   $length;
+    private ?Node $head = null;
+    private ?Node $tail = null;
+    private int $size = 0;
 
-    public function __construct()
+
+    public function addFirst($val): void
     {
-        $this->head   = null;
-        $this->tail   = null;
-        $this->length = 0;
+        $this->linkFirst($val);
     }
 
-    public function shift()
-    {
 
-        if ($this->head === null) {
-            throw new Exception("List is empty");
+    public function addLast($val): void
+    {
+        $this->linkLast($val);
+    }
+
+
+    public function add(int $index,  $val): void
+    {
+        // Allow adding at the end:
+        // add(count(), $value)
+        if ($index < 0 || $index > $this->size) {
+            throw new OutOfBoundsException("Index error");
         }
 
+        if ($index === 0) {
+            $this->linkFirst($val);
+            return;
+        }
+
+        if ($index === $this->size) {
+            $this->linkLast($val);
+            return;
+        }
+
+        $this->linkBefore($val, $this->nodeAt($index));
+    }
+
+
+    public function removeFirst(): void
+    {
+        if ($this->isEmpty()) {
+            throw new UnderflowException("List is empty");
+        }
+
+        $this->unlinkFirst();
+    }
+
+
+    public function removeLast(): void
+    {
+        if ($this->isEmpty()) {
+            throw new UnderflowException("List is empty");
+        }
+
+        $this->unlinkLast();
+    }
+
+
+    public function remove(int $index): void
+    {
+        $this->unlink($this->nodeAt($index));
+    }
+
+
+    public function isEmpty(): bool
+    {
+        return $this->size === 0;
+    }
+
+
+    /**
+     * Reverse the list iteratively.
+     *
+     * Time: O(n)
+     * Space: O(1)
+     */
+    public function reverse(): void
+    {
+
+        $curr = $this->head;
+
+        while ($curr != null) {
+            $next = $curr->next;
+            $curr->next = $curr->prev;
+            $curr->prev = $next;
+            $curr = $next;
+        }
+
+        $oldHead = $this->head;
+        $this->head = $this->tail;
+        $this->tail = $oldHead;
+    }
+
+
+    /**
+     * Reverse the list recursively.
+     *
+     * Time: O(n)
+     * Space: O(n) due to call stack
+     */
+    public function reverseRecursive(): void
+    {
+        $this->reverseRecursiveNode($this->head);
+
+        // Swap head and tail
+        $oldHead = $this->head;
+        $this->head = $this->tail;
+        $this->tail = $oldHead;
+    }
+
+
+    private function reverseRecursiveNode(?Node $node): void
+    {
+        if ($node === null) {
+            return;
+        }
+
+        $next = $node->next;
+
+        $node->next = $node->prev;
+        $node->prev = $next; 
+
+        $this->reverseRecursiveNode($next);
+    }
+
+
+    public function count(): int
+    {
+        return $this->size;
+    }
+
+
+    public function getIterator(): Traversable
+    {
+        $current = $this->head;
+
+        while ($current !== null) {
+            yield $current;
+            $current = $current->next;
+        }
+    }
+
+
+    private function linkFirst($val): void
+    {
+        $head = $this->head;
+
+        $node = new Node(
+            $val,
+            null,
+            $head
+        );
+
+        $this->head = $node;
+
+        if ($head === null) {
+            $this->tail = $node;
+        } else {
+            $head->prev = $node;
+        }
+
+        $this->size++;
+    }
+
+
+    private function linkLast($val): void
+    {
+        $tail = $this->tail;
+
+        $node = new Node(
+            $val,
+            $tail,
+            null
+        );
+
+        $this->tail = $node;
+
+        if ($tail === null) {
+            $this->head = $node;
+        } else {
+            $tail->next = $node;
+        }
+
+        $this->size++;
+    }
+
+
+    private function linkBefore($val, Node $node): void
+    {
+        $prev = $node->prev;
+
+        $newNode = new Node(
+            $val,
+            $prev,
+            $node
+        );
+
+        $node->prev = $newNode;
+
+        if ($prev === null) {
+            $this->head = $newNode;
+        } else {
+            $prev->next = $newNode;
+        }
+
+        $this->size++;
+    }
+
+
+    private function unlinkFirst(): void
+    {
         $node = $this->head;
+        $next = $node->next;
 
-        if ($this->head === $this->tail) {
-            $this->head = null;
+        $this->head = $next;
+
+        if ($next === null) {
             $this->tail = null;
         } else {
-            $this->head       = $this->head->next;
-            $this->head->prev = null;
+            $next->prev = null;
         }
 
-        $this->length--;
+        // Fully detach removed node
+        $node->next = null;
 
-        return $node->data;
+        $this->size--;
     }
 
-    public function unshift(mixed $val)
+
+    private function unlinkLast(): void
     {
-        $node = new Node($val);
-
-        if ($this->head === null) {
-            $this->head = $node;
-            $this->tail = $node;
-        } else {
-            $node->next = $this->head;
-            $this->head->prev = $node;
-            $this->head = $node;
-        }
-
-        $this->length++;
-    }
-
-    public function push(mixed $val)
-    {
-        $node = new Node($val);
-
-        if ($this->tail === null) {
-            $this->head = $node;
-            $this->tail = $node;
-        } else {
-            $this->tail->next = $node;
-            $node->prev = $this->tail;
-            $this->tail = $node;
-        }
-
-        $this->length++;
-    }
-
-    public function pop()
-    {
-        if ($this->tail === null) {
-            throw new Exception("List is empty");
-        }
-
         $node = $this->tail;
+        $prev = $node->prev;
 
-        if ($this->tail === $this->head) {
+        $this->tail = $prev;
+
+        if ($prev === null) {
             $this->head = null;
-            $this->tail = null;
         } else {
-            $this->tail       = $this->tail->prev;
-            $this->tail->next = null;
+            $prev->next = null;
         }
 
+        // Fully detach removed node
+        $node->prev = null;
 
-        $this->length--;
-
-        return $node->data;
+        $this->size--;
     }
 
-    public function add(int $index, mixed $val)
+
+    private function unlink(Node $node): void
     {
-        if ($index < 0 || $index > $this->length) {
-            throw new Exception("Index out of bounds");
+        $prev = $node->prev;
+        $next = $node->next;
+
+        if ($prev === null) {
+            $this->head = $next;
+        } else {
+            $prev->next = $next;
         }
 
-        if ($index === 0) {
-            $this->unshift($val);
-            return;
+        if ($next === null) {
+            $this->tail = $prev;
+        } else {
+            $next->prev = $prev;
         }
 
-        if ($index === $this->length) {
-            $this->push($val);
-            return;
-        }
+        // Fully detach node
+        $node->prev = null;
+        $node->next = null;
 
-        $node = new Node($val);
-        $curr = $this->getNode($index);
-
-        $node->next = $curr;
-        $node->prev = $curr->prev;
-        $curr->prev->next = $node;
-        $curr->prev = $node;
-
-        $this->length++;
+        $this->size--;
     }
 
-    public function remove(int $index)
+
+    private function nodeAt(int $index): Node
     {
-        if ($index < 0 || $index >= $this->length) {
-            throw new Exception("Index out of bounds");
+        if ($index < 0 || $index >= $this->size) {
+            throw new OutOfBoundsException("Index error");
         }
 
-        if ($index === 0) {
-            $this->shift();
-            return;
-        }
+        // Search from the closest side
+        if ($index < intdiv($this->size, 2)) {
 
-        if ($index === $this->length - 1) {
-            $this->pop();
-            return;
-        }
+            $node = $this->head;
 
-        $curr = $this->getNode($index);
-
-        $curr->prev->next = $curr->next;
-        $curr->next->prev = $curr->prev;
-
-        $this->length--;
-    }
-
-    public function __toString()
-    {
-        $str  = '';
-        $curr = $this->head;
-        while ($curr !== null) {
-            $str .= $curr->data . ' -> ';
-            $curr = $curr->next;
-        }
-
-        return $str  . 'NULL';
-    }
-
-    private function getNode($index)
-    {
-
-        $curr = $this->head;
-
-        for ($i = 0; $i < $index; $i++) {
-
-            if ($curr === null) {
-                return null;
+            for ($i = 0; $i < $index; $i++) {
+                $node = $node->next;
             }
+        } else {
 
-            $curr = $curr->next;
+            $node = $this->tail;
+
+            for ($i = $this->size - 1; $i > $index; $i--) {
+                $node = $node->prev;
+            }
         }
 
-        return $curr;
+        return $node;
     }
 }
 
 
-$list = new LinkedList();
+$list = new DoublyLinkedList();
 
-$list->push(10);
-$list->push(20);
-$list->push(30);
-$list->push(40);
-$list->add(2, 10000);
+for ($i = 0; $i < 10; $i++) {
+    $list->addLast($i);
+}
 
-print $list;
-print "\n";
-print "HEAD:" . ($list->head?->data);
-print "\n";
-print "TAIL:" . ($list->tail?->data);
+
+$list->reverseRecursive();
+
+foreach ($list as $key => $value) {
+    print_r($value->data);
+}
